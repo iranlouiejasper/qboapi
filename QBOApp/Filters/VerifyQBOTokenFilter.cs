@@ -58,30 +58,32 @@ namespace QBOApp.Filters
                         }
                     }
 
-                    //Do refresh
-                    var tokenResp = await QBOHelper.RefreshAccessToken(ConfigHelper.AccessTokenUrl,
+                    //Do refresh token
+                    var res = await QBOHelper.RefreshAccessToken(ConfigHelper.AccessTokenUrl,
                            refreshToken,
                            ConfigHelper.ClientId,
                            ConfigHelper.ClientSecret
                         );
 
-                    if(tokenResp != null)
+                    if(res == null)
                     {
-                        var data = new
-                        {
-                            accessToken = tokenResp.access_token,
-                            refreshToken = tokenResp.refresh_token,
-                            accessTokenExpiresIn = DateTime.Now.AddSeconds(Convert.ToInt32(tokenResp.expires_in)),
-                            refreshTokenExpiresIn = DateTime.Now.AddSeconds(Convert.ToInt32(tokenResp.x_refresh_token_expires_in)),
-                            code = code,
-                            realmId = realmId
-                        };
-
-                        FileWriter.Write("temp",
-                           "tokens",
-                           "json",
-                           JsonConvert.SerializeObject(data));
+                        filterContext.Result = new RedirectResult("~/oauth2");
                     }
+
+                    var data = new
+                    {
+                        accessToken = res.access_token,
+                        refreshToken = res.refresh_token,
+                        accessTokenExpiresIn = DateTime.Now.AddSeconds(Convert.ToInt32(res.expires_in)),
+                        refreshTokenExpiresIn = DateTime.Now.AddSeconds(Convert.ToInt32(res.x_refresh_token_expires_in)),
+                        code = code,
+                        realmId = realmId
+                    };
+
+                    FileWriter.Write("temp",
+                       "tokens",
+                       "json",
+                       JsonConvert.SerializeObject(data));
                 }
             }
         }
